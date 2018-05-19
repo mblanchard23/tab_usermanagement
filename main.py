@@ -103,13 +103,3 @@ def update_group_assigments(existing_group_users=None, new_group_assignments=Non
             }
 
 
-if __name__ == '__main__':
-    import argparse
-
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--run', action='store_true', help='Add / Subtract User Groups in Tableau Server')
-    args = parser.parse_args()
-
-    if args.run:
-        print('Running job')
-        update_group_assigments()
