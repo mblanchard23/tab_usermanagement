@@ -172,13 +172,23 @@ def add_to_usergroup(username, group_name, tableau_groups=None, tableau_users=No
     group_id = group_dict.get(group_name)
     user_id = user_dict.get(username.upper())
 
+    result_dict = {'operation_type':'add_to_usergroup'
+                    ,'username':username
+                    ,'group_name':group_name
+                    ,'outcome':None
+                    ,'status':None}
+
     if not user_id:
         print('User %s does not exist in Tableau' % username)
-        return None
+        result_dict['status'] = 'User does not exist in Tableau'
+        result_dict['outcome'] = 'Failed'
+        return result_dict
 
     if not group_id:
         print('Group %s does not exist in Tableau' % group_name)
-        return None
+        result_dict['status'] = 'Group does not exist in Tableau'
+        result_dict['outcome'] = 'Failed'
+        return result_dict
 
     req = add_uid_to_gid(user_id=user_id
                          , group_id=group_id
@@ -186,13 +196,21 @@ def add_to_usergroup(username, group_name, tableau_groups=None, tableau_users=No
 
     if req.status_code in (200, 201):
         print('User %s successfully added to %s' % (username, group_name))
+        result_dict['status'] = 'User added to group'
+        result_dict['outcome'] = 'Success'
+        return result_dict
 
     if req.status_code == 409:
         print('User %s is already a member of %s!' % (username, group_name))
+        result_dict['status'] = 'User added to group'
+        result_dict['outcome'] = 'Failed'
+        return result_dict
 
     if req.status_code not in (200, 201, 409):
         print(req.text)
-
+        result_dict['status'] = 'Unknown Error'
+        result_dict['outcome'] = 'Failed'
+        return result_dict
 
 def remove_from_usergroup(username, group_name, tableau_groups=None, tableau_users=None, credentials=None):
     if tableau_groups is None:
@@ -205,16 +223,28 @@ def remove_from_usergroup(username, group_name, tableau_groups=None, tableau_use
     user_dict = tableau_users.set_index('name').to_dict()['id']
     group_id = group_dict.get(group_name)
     user_id = user_dict.get(username.upper())
+    result_dict = {'operation_type':'remove_from_usergroup'
+                    ,'username':username
+                    ,'group_name':group_name
+                    ,'outcome':None
+                    ,'status':None}
 
     req = remove_uid_from_gid(user_id=user_id,group_id=group_id,credentials=credentials)
 
     if req.status_code in (200, 201, 204):
         print('User %s successfully removed from %s' % (username, group_name))
+        result_dict['outcome'] = 'Success'
+        result_dict['status'] = 'User removed from group'
+        return result_dict
 
     if req.status_code == 409:
         print('User %s is not a member of %s!' % (username, group_name))
+        result_dict['outcome'] = 'Failed'
+        result_dict['status'] = 'User not a member of group'
+        return result_dict
 
     if req.status_code not in (200, 201, 409):
         print(req.text)
-
-    return req
+        result_dict['status'] = 'Unknown Error'
+        result_dict['outcome'] = 'Failed'
+        return result_dict
