@@ -7,6 +7,8 @@ from usermanagement import get_new_group_assignments
 creds = tableau_credentials()
 tableau_users = get_ts_users()
 tableau_groups = get_ts_groups()
+existing_group_users = None
+new_group_assignments = None
 
 
 def help():
@@ -14,21 +16,19 @@ def help():
 
 
 def add_user_to_group(username, group_name):
-    add_to_usergroup(username=username
-                     , group_name=group_name
-                     , tableau_groups=tableau_groups
-                     , tableau_users=tableau_users
-                     , credentials=creds)
-
-    return None
+    return add_to_usergroup(username=username
+                            , group_name=group_name
+                            , tableau_groups=tableau_groups
+                            , tableau_users=tableau_users
+                            , credentials=creds)
 
 
 def remove_user_from_group(username, group_name):
-    remove_from_usergroup(username=username
-                          , group_name=group_name
-                          , tableau_groups=tableau_groups
-                          , tableau_users=tableau_users
-                          , credentials=creds)
+    return remove_from_usergroup(username=username
+                                 , group_name=group_name
+                                 , tableau_groups=tableau_groups
+                                 , tableau_users=tableau_users
+                                 , credentials=creds)
 
 
 def update_group_assigments(existing_group_users=None, new_group_assignments=None, groups=tableau_groups,
@@ -66,11 +66,11 @@ def update_group_assigments(existing_group_users=None, new_group_assignments=Non
 
     '''Add new group assignements new_group_assignments'''
     print('\nTotal assigments to create: %d\n' % merged[pandas.isnull(merged.username_y)].__len__())
-
+    outcomes = []
     add_counter = 0
     for u in merged[relationships_to_add][['username', 'group_name']].to_dict(orient='records'):
         add_counter += 1
-        add_user_to_group(**u)
+        outcomes.append(add_user_to_group(**u))
         if add_counter % 200 == 0:
             print('Record number: %d' % add_counter)
             print('Runtime: %d' % (datetime.datetime.now() - a).total_seconds())
@@ -78,7 +78,7 @@ def update_group_assigments(existing_group_users=None, new_group_assignments=Non
     rem_counter = 0
     for u in merged[relationships_to_remove][['username', 'group_name']].to_dict(orient='records'):
         rem_counter += 1
-        remove_user_from_group(**u)
+        outcomes.append(remove_user_from_group(**u))
         if rem_counter % 200 == 0:
             print('Record number: %d' % add_counter)
             print('Runtime: %d' % (datetime.datetime.now() - a).total_seconds())
@@ -99,7 +99,6 @@ def update_group_assigments(existing_group_users=None, new_group_assignments=Non
         , 'job_end': b.strftime('%Y-%m-%d %H:%M:%S')
         , 'users_added': add_counter
         , 'users_removed': rem_counter
+        , 'outcomes': outcomes
                     }
             }
-
-
